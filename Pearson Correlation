@@ -1,4 +1,3 @@
-
 %Pearson correlation coefficient function
 
 function [corr_coeff] = P_C_coeff(RV_1,RV_2)
