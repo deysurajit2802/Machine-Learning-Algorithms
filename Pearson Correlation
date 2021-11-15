@@ -1,0 +1,51 @@
+
+%Pearson correlation coefficient function
+
+function [corr_coeff] = P_C_coeff(RV_1,RV_2)
+[row1,col1] = size(RV_1); 
+[row2,col2] = size(RV_2);
+
+%mean of the variables
+mean1 = mean(RV_1);
+mean2 = mean(RV_2);
+
+%variables subtracted by the respective means
+mean_sub1 = RV_1 - mean1*ones(row1,col1);
+mean_sub2 = RV_2 - mean2*ones(row2,col2);
+
+%correlation coefficient
+corr_coeff = dot(mean_sub1,mean_sub2)/(sqrt(dot(mean_sub1,mean_sub1))*sqrt(dot(mean_sub2,mean_sub2)));
+end
+
+clc
+clear all
+ 
+data = xlsread('Wine_quality.xlsx'); %Wine Quality Data Set from UCI Open Repository Link: https://archive.ics.uci.edu/ml/datasets/wine+quality
+[row,col] = size(data);
+Tar_var = col;
+corr_table = zeros(col-1,2);
+
+%Evaluating Pearson correlation coefficient (Feature and Target variable)
+for i = 1:col-1
+    corr_table(i,1) = i;
+    corr_table(i,2) = P_C_coeff(data(:,i), data(:,Tar_var));
+    fprintf('Correlation between feature %d and Target Variable %d is %10s \n', i, col, corr_table(i,2))
+end
+corr_table
+ 
+%Sorting the table as per correlation coefficient value
+corr_rank_table = sortrows(abs(corr_table),2)
+
+%Evaluating correlation between features
+corr_table1 = zeros(col-1, col-1);
+threshold_corr = 0.8;
+for i = 1:col-1
+    for j = 1:col-1
+        corr_table1(i,j) = P_C_coeff(data(:,i),data(:,j));
+        if abs(corr_table1(i,j))>threshold_corr && i~=j
+            fprintf('Correlation between feature %d and feature %d is strong \n', i, j)
+        end
+    end
+end
+ 
+corr_table1
