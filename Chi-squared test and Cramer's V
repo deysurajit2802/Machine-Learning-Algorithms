@@ -1,0 +1,62 @@
+ clc
+ clear all
+% data = readtable('car_data.xlsx'); %UCI Repository
+ data = readtable('nursery.xlsx'); %UCI Repository
+ [row,col] = size(data);
+ col_no = 8; 
+ data_table = table2array(data);
+ fea_catgs = unique(data_table(:,col_no));
+ [row_fea,col_fea] = size(fea_catgs);
+ Tar_Var = col;
+ Tar_Var_catgs = unique(data_table(:,Tar_Var));
+ [row_TV,col_TV] = size(Tar_Var_catgs);
+ 
+ %Contingency Table
+ C_table = zeros(row_TV,row_fea);
+ 
+ for i = 1:row_TV
+     for j = 1:row_fea
+         for k = 1:row
+             if(strcmp(data_table(k,col_no),fea_catgs(j,col_fea)) && strcmp(data_table(k,Tar_Var),Tar_Var_catgs(i,col_TV)))
+                 C_table(i,j) = C_table(i,j)+1;
+             end
+         end
+     end
+ end
+ C_table
+ 
+ %Chi Square Calculation
+ chi_square = 0;
+ Total_freq = sum (sum(C_table));
+ Exp_freq = zeros (row_TV,row_fea);
+ for i=1:row_TV
+     for j=1:row_fea
+         Exp_freq(i,j)=(sum(C_table(i,:))*sum(C_table(:,j)))/Total_freq;
+     end
+ end
+ Exp_freq
+ 
+for i = 1:row_TV
+    for j=1:row_fea
+        chi_square = chi_square+((C_table(i,j)-Exp_freq(i,j))^2/Exp_freq(i,j));
+    end
+end
+chi_square
+ 
+%Chi Square Test
+dof = (row_TV-1)*(row_fea-1);
+prob = 1-chi2cdf(chi_square,dof);
+ 
+%Assuming p_star as 5%
+p_star = 0.05;
+if prob>= p_star;
+    fprintf('Null hypothesis is valid: The variables are independent in population')
+    
+else
+    fprintf('Null hypothesis is rejected: The variables are dependent in population')
+end
+ 
+%Calculation of Cramer's V
+N = Total_freq;
+K = min(row_TV,row_fea);
+CV = sqrt(chi_square/(N*(K-1)))
