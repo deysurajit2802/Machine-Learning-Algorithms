@@ -1,0 +1,96 @@
+clc
+clear all
+ 
+data = xlsread('Exam_ranks.xlsx');
+[row,col] = size(data);
+ 
+%Insert table with Student Number
+for i= 1:row
+    MT_tab(i,1) = i;
+    MT_tab(i,2) = -data(i,1);
+end
+MT_tab;
+MT_tab_sort = sortrows(MT_tab,2);
+for j= 1:row
+    FT_tab(j,1) = j;
+    FT_tab(j,2) = -data(j,2);
+end
+FT_tab;
+FT_tab_sort = sortrows(FT_tab,2);
+    
+%Insert Ranks
+MT_tab_ranked(:,1) = MT_tab_sort(:,1);
+MT_tab_ranked(:,2) = MT_tab_sort(:,2);
+dummy = 1;
+count = 0;
+for i= 1:row
+    if MT_tab_ranked(i,2)==MT_tab_ranked(1,2)
+    MT_tab_ranked(i,3)=dummy;
+    end
+    if (i~=1 && MT_tab_ranked(i,2)==MT_tab_ranked(i-1,2))
+        MT_tab_ranked(i,3)=dummy;
+        count = count+1;
+    end
+    if (i~=1 && MT_tab_ranked(i,2)~=MT_tab_ranked(i-1,2))
+        dummy = dummy+1+count;
+        MT_tab_ranked(i,3)=dummy;
+        count = 0;
+    end
+end
+MT_tab_ranked
+FT_tab_ranked(:,1) = FT_tab_sort(:,1);
+FT_tab_ranked(:,2) = FT_tab_sort(:,2);
+dummy = 1;
+count = 0;
+for i= 1:row
+   if FT_tab_ranked(i,2)==FT_tab_ranked(1,2)
+    FT_tab_ranked(i,3)=dummy;
+    end
+    if (i~=1 && FT_tab_ranked(i,2)==FT_tab_ranked(i-1,2))
+        FT_tab_ranked(i,3)=dummy;
+        count = count+1;
+    end
+    if (i~=1 && FT_tab_ranked(i,2)~=FT_tab_ranked(i-1,2))
+        dummy = dummy+1+count;
+        FT_tab_ranked(i,3)=dummy;
+        count = 0;
+    end
+end
+FT_tab_ranked
+ 
+%Sort as per Student Number
+MT_SN_sort = sortrows(MT_tab_ranked,1);
+FT_SN_sort = sortrows(FT_tab_ranked,1);
+ 
+%Extracting the rank vectors of the same students for computation of
+%Spearman coefficient
+rank_vector_MT = MT_SN_sort(:,3);
+rank_vector_FT = FT_SN_sort(:,3);
+ 
+%Computaion of Spearman's coefficient
+diff = rank_vector_MT-rank_vector_FT;
+Sp_coeff_Ntied = 1 - 6*dot(diff,diff)/(row*(row^2-1))
+ 
+%Tied Ranking
+MT_TR = tiedrank(-data(:,1));
+FT_TR = tiedrank(-data(:,2));
+ 
+%Computaion of Spearman's coefficient
+Sp_coeff_tied = P_C_coeff(MT_TR,FT_TR)
+
+%Pearson correlation coefficient function
+function [corr_coeff] = P_C_coeff(RV_1,RV_2)
+[row1,col1] = size(RV_1); 
+[row2,col2] = size(RV_2);
+ 
+%mean of the variables
+mean1 = mean(RV_1);
+mean2 = mean(RV_2);
+ 
+%variables subtracted by the respective means
+mean_sub1 = RV_1 - mean1*ones(row1,col1);
+mean_sub2 = RV_2 - mean2*ones(row2,col2);
+ 
+%correlation coefficient
+corr_coeff = dot(mean_sub1,mean_sub2)/(sqrt(dot(mean_sub1,mean_sub1))*sqrt(dot(mean_sub2,mean_sub2)));
+end 
