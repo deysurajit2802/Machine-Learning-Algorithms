@@ -1,0 +1,186 @@
+clc
+clear all
+ 
+%Relief Algorithm (Categorical Data)
+%Car Dataset  UCI Repository Link: https://archive.ics.uci.edu/ml/datasets/car+evaluation
+data = readtable('Car_data.xlsx');
+[row,col] = size(data)
+N=90;
+M = floor(N);
+data_table = table2array(data);
+Tar_Var = col;
+Tar_Var_catgs = unique(data_table(:,Tar_Var))
+[row_TV,col_TV] = size(Tar_Var_catgs);
+ 
+D_1=1; %Dummy variable
+D_2=1; %Dummy variable
+ 
+%For loop for partitioning the entire data into 2 categories
+%Class1: 'acc' & 'unacc'; Class2: 'good' & 'vgood'
+ 
+for i=1:row
+    if (strcmp(data_table(i,col),'acc') || (strcmp(data_table(i,col),'unacc')))
+        class_1(D_1,1:col-1)=data_table(i,1:col-1);
+        D_1=D_1+1;
+    end
+    if (strcmp(data_table(i,col),'good') || (strcmp(data_table(i,col),'vgood')))
+        class_2(D_2,1:col-1)=data_table(i,1:col-1);
+        D_2=D_2+1;
+    end
+end
+ 
+[class_1_size,dummy] = size(class_1);
+[class_2_size,dummy] = size(class_2);
+ 
+%weights-weights of each feature initialized to zero
+weights = zeros(1,col-1);
+%random vector initialized to zero
+ran_vec = zeros(1,col-1);
+ 
+for i=1:M
+    %choosing an integer randomly in between [1,m]
+    ran_int = randi([1,row],1);
+    %random instance chosen from data
+    ran_vec = data_table(ran_int,:);
+    %removing the random vector from data
+    %chosing an instance without replacement
+    data_table(ran_int,:)=[];
+    %evaluating revised size of dataset
+    [row,col] = size(data_table);
+    %finding the class of random instance
+    ran_vec1=ran_vec(1,1:col-1);
+    if (strcmp(ran_vec(1,col),'acc') || strcmp(ran_vec(1,col),'unacc'))
+        ran_class=1;
+    elseif (strcmp(ran_vec(1,col),'good') || strcmp(ran_vec(1,col),'vgood'))
+        ran_class=2;
+    end
+    
+    %finding nearest hit and nearest miss
+    if ran_class==1
+        class_1_1=class_1;
+        %remove the random instance from class 1
+        for j=1:class_1_size
+            if strcmp(ran_vec1(1,:),class_1(j,:))
+                class_1_1(j,:)=[];
+                [class_1_size,dummy]=size(class_1_1);
+                break
+            end
+        end
+        class_1 = class_1_1;
+      
+        %finding distances of the random instance w.r.t each other instance
+        %in class 1
+        for k=1:class_1_size
+            distH(k,1)=k;
+            count=0;
+            for x=1:col-1
+                if strcmp(ran_vec1(1,x),class_1(k,x))
+                    count=count+0;
+                    distH(k,2)=count;
+                else
+                    count=count+1;
+                    distH(k,2)=count;
+                end
+            end        
+        end
+        
+        %sorting distances
+        sorted_hit = sortrows(distH,2);
+        %finding the nearest hit
+        nearest_hit = class_1(sorted_hit(1,1),:);
+        
+        %clearing the variable distH
+        clearvars distH    
+        
+        %finding distances of the random instance w.r.t each other instance
+        %in class 2
+        for k=1:class_2_size
+            distM(k,1)=k;
+            count=0;
+            for y=1:col-1
+                if strcmp(ran_vec1(1,y),class_2(k,y))
+                    count=count+0;
+                    distM(k,2)=count;
+                else
+                    count=count+1;
+                    distM(k,2)=count;
+                end
+            end        
+        end
+        
+        %sorting distances
+        sorted_miss = sortrows(distM,2);
+        %finding nearest miss
+        nearest_miss = class_2(sorted_miss(1,1),:);
+        
+        %clearing the variable distH
+        clearvars distM
+    end
+    
+    if ran_class==2
+        class_2_1=class_2;
+        for j=1:class_2_size
+            if strcmp(ran_vec1(1,:),class_2(j,:))
+                class_2_1(j,:)=[];
+                [class_2_size,dummy]=size(class_2_1);
+                break
+            end
+        end
+        class_2=class_2_1;
+        
+        for k=1:class_2_size
+            distH1(k,1)=k;
+            count=0;
+            for x=1:col-1
+                if strcmp(ran_vec1(1,x),class_2(k,x))
+                    count=count+0;
+                    distH1(k,2)=count;
+                else
+                    count=count+1;
+                    distH1(k,2)=count;
+                end
+            end    
+        end
+        sorted_hit1=sortrows(distH1,2);
+        nearest_hit=class_2(sorted_hit1(1,1),:);
+        clearvars distH1
+        
+        for k=1:class_1_size
+            distM1(k,1)=k;
+             count=0;
+            for y=1:col-1
+                if strcmp(ran_vec1(1,y),class_1(k,y))
+                    count=count+0;
+                    distM1(k,2)=count;
+                else
+                    count=count+1;
+                    distM1(k,2)=count;
+                end
+            end  
+        end
+        sorted_miss1=sortrows(distM1,2);
+        nearest_miss=class_1(sorted_miss1(1,1),:);
+        clearvars distM1
+    end
+    %updating weights
+    for q=1:col-1
+        if strcmp(ran_vec1(1,q),nearest_hit(1,q))
+            weights(1,q)=weights(1,q)-(1/M)*0;
+        else
+            weights(1,q)=weights(1,q)-(1/M)*1;
+        end
+        if strcmp(ran_vec1(1,q),nearest_miss(1,q))
+            weights(1,q)=weights(1,q)+(1/M)*0;
+        else
+            weights(1,q)=weights(1,q)+(1/M)*1;
+        end
+    end
+end
+weights_final=zeros(col-1,2);
+weights_final(1:col-1,2)=weights(1,1:col-1);
+for i=1:col-1
+    weights_final(i,1)=i;
+end 
+%ranking the features
+ranking=sortrows(weights_final,2)
+
