@@ -1,0 +1,151 @@
+clc
+clear all
+data=xlsread('LDAExample.xlsx');
+% data=xlsread('LDA_Class_Ex.xlsx');
+[row,col]=size(data)
+ 
+a=1;
+b=1;
+c=1;
+ 
+%classification of data 
+for i=1:row
+    if data(i,3)==1
+        data_1(a,:)=data(i,:);
+        a=a+1;
+    end
+    
+    if data(i,3)==2
+        data_2(b,:)=data(i,:);
+        b=b+1;
+    end
+    if data(i,3)==3
+        data_3(c,:)=data(i,:);
+        c=c+1;
+    end
+end
+ 
+% size of the classes
+[row1,col1]=size(data_1);
+[row2,col2]=size(data_2);
+[row3,col3]=size(data_3);
+ 
+%Calculating means of individual classes
+mean_1(1,1)= mean(data_1(:,1));
+mean_1(2,1)= mean(data_1(:,2));
+ 
+mean_2(1,1)= mean(data_2(:,1));
+mean_2(2,1)= mean(data_2(:,2));
+ 
+mean_3(1,1)= mean(data_3(:,1));
+mean_3(2,1)= mean(data_3(:,2));
+ 
+%Ovearall mean of the data
+mean_ovr(1,1)= mean(data(:,1));
+mean_ovr(2,1)= mean(data(:,2));
+ 
+mean_1
+mean_2
+mean_3
+mean_ovr
+%Between class variance
+S_B=(mean_1-mean_ovr)*(mean_1-mean_ovr)'+(mean_2-mean_ovr)*(mean_2-mean_ovr)'+(mean_3-mean_ovr)*(mean_3-mean_ovr)'
+ 
+%Within class variance 
+S_W=zeros(col-1,col-1);
+ 
+for i=1:row1
+    S_W=S_W+(data_1(i,1:2)'-mean_1)*(data_1(i,1:2)'-mean_1)';
+end
+ 
+for i=1:row2
+    S_W=S_W+(data_2(i,1:2)'-mean_2)*(data_2(i,1:2)'-mean_2)';
+end
+ 
+for i=1:row3
+    S_W=S_W+(data_3(i,1:2)'-mean_3)*(data_3(i,1:2)'-mean_3)';
+end
+ 
+S_W
+ 
+%Eigen Values and Vectors
+[Vec,Val]=eig((S_W^-1)*S_B)
+ 
+if Val(1,1)>Val(2,2)
+    Lar_Vec=Vec(:,1);
+end
+ 
+if Val(1,1)<Val(2,2)
+    Lar_Vec=Vec(:,2);
+end
+ 
+Lar_Vec
+ 
+%Reduced Space calculation
+data_1_red=data_1(:,1:2)*Lar_Vec;
+data_1_red(:,2)=0;
+ 
+data_2_red=data_2(:,1:2)*Lar_Vec;
+data_2_red(:,2)=0;
+ 
+data_3_red=data_3(:,1:2)*Lar_Vec;
+data_3_red(:,2)=0;
+ 
+%%Plotting
+ 
+hold on
+%plotting direction of Eigen vector
+% plotv(150*Lar_Vec);
+ 
+%plotting the data points 
+scatter(data_1(:,1),data_1(:,2), ...
+    'MarkerFaceColor', [1 0 1]...
+    )
+scatter(data_2(:,1),data_2(:,2), ...
+    'MarkerFaceColor', [1 1 0]...
+    )
+scatter(data_3(:,1),data_3(:,2),...
+    'MarkerFaceColor', [0 1 1]...
+    )
+ 
+%plotting the means of the classes
+scatter(mean_1(1,1),mean_1(2,1),...
+    'MarkerFaceColor', [0 0 0]...
+)
+scatter(mean_2(1,1),mean_2(2,1),...
+    'MarkerFaceColor', [0 0 0]...
+    )
+scatter(mean_3(1,1),mean_3(2,1),...
+    'MarkerFaceColor', [0 0 0]...
+    )
+scatter(mean_ovr(1,1),mean_ovr(2,1),...
+    'MarkerFaceColor', [1 0 0]...
+    )
+ 
+%Plotting the reduced space data
+scatter(data_1_red(:,1), data_1_red(:,2),...
+    'MarkerFaceColor', [1 1 0]...
+    )
+scatter(data_2_red(:,1), data_2_red(:,2),...
+    'MarkerFaceColor', [1 0 1]...
+    )
+scatter(data_3_red(:,1), data_3_red(:,2),...
+    'MarkerFaceColor', [0 1 1]...
+    )
+ 
+%Plotting reduced space means
+mean_1_1=mean(data_1_red(:,1));
+mean_2_2=mean(data_2_red(:,1));
+mean_3_3=mean(data_3_red(:,1));
+ 
+scatter(mean_1_1, 0,...
+    'MarkerFaceColor', [0 0 0]...
+    )
+scatter(mean_2_2, 0,...
+    'MarkerFaceColor', [0 0 0]...
+    )
+scatter(mean_3_3, 0,...
+    'MarkerFaceColor', [0 0 0]...
+    )
+hold off
+
