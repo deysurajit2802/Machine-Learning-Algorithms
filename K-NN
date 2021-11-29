@@ -1,0 +1,116 @@
+clc
+clear all
+ 
+data=xlsread('Example_DT_conti.xlsx');
+[row,col]=size(data);
+K=5; %[Assumed]
+dist=zeros(row,2);
+dim=100;
+data_plot=zeros(dim,dim);  %Plotting Decision Surface
+ 
+for i=1:dim
+    for j=1:dim
+        data_new(1,1)=i;
+        data_new(2,1)=j;
+        
+        for p=1:row
+            dist(p,1)=sqrt(dot((data_new-data(p,1:2)'),(data_new-data(p,1:2)')));
+            dist(p,2)=data(p,col);
+        end
+       
+        %sort distances of the points
+        dist_sort=sortrows(dist,1);
+        
+        %Categorizing the data
+        catg=zeros(3,1);
+        
+        for h=1:K
+            if dist_sort(h,2)==0
+                catg(1,1)=catg(1,1)+1;
+            end
+            
+            if dist_sort(h,2)==1
+                catg(2,1)=catg(2,1)+1;
+            end
+            
+            if dist_sort(h,2)==2
+                catg(3,1)=catg(3,1)+1;
+            end
+        end
+            
+            [val,ind]=max(catg);
+            data_plot(i,j)=ind-1;
+    end
+end
+ 
+ff=1;
+gg=1;
+hh=1;
+ 
+for i=1:100
+    for j=1:100
+        if data_plot(i,j)==0
+            data_0(ff,1)=i;
+            data_0(ff,2)=j;
+            ff=ff+1;
+        end
+        if data_plot(i,j)==1
+            data_1(gg,1)=i;
+            data_1(gg,2)=j;
+            gg=gg+1;
+        end
+        if data_plot(i,j)==2
+            data_2(hh,1)=i;
+            data_2(hh,2)=j;
+            hh=hh+1;
+        end
+    end
+end
+ 
+a=1;
+b=1;
+c=1;
+ 
+for i=1:row
+    if data(i,3)==0
+        data_00(a,1)=data(i,1);
+        data_00(a,2)=data(i,2);
+        a=a+1;
+ 
+    elseif data(i,3)==1
+        data_11(b,1)=data(i,1);
+        data_11(b,2)=data(i,2);
+        b=b+1;
+    
+    elseif data(i,3)==2
+        data_22(c,1)=data(i,1);
+        data_22(c,2)=data(i,2);
+        c=c+1;
+    end
+end
+ 
+ 
+hold on
+ 
+scatter(data_0(:,1), data_0(:,2),...
+    'MarkerFaceColor', [1 1 0]...
+    )
+scatter(data_1(:,1), data_1(:,2),...
+    'MarkerFaceColor', [1 0 1]...
+    )
+scatter(data_2(:,1), data_2(:,2),...
+    'MarkerFaceColor', [1 1 1]...
+    )
+ 
+ 
+scatter(data_00(:,1), data_00(:,2),...
+    'MarkerFaceColor', [0 1 1]...
+    )
+scatter(data_11(:,1), data_11(:,2),...
+    'MarkerFaceColor', [0 0.75 0.75]...
+    )
+scatter(data_22(:,1), data_22(:,2),...
+    'MarkerFaceColor', [0 0.25 0.25]...
+    )
+    
+hold off
